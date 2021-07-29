@@ -1,0 +1,182 @@
+<% include templates/header.ejs %>
+<% include templates/sidebar.ejs %>
+<div class="container-fluid">
+    <!-- Breadcrumbs-->
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <i class="fa fa-home"></i>
+            <a href="/">Dashboard</a>
+        </li>
+        <li class="breadcrumb-item active">RealEstate</li>
+    </ol>
+    <div class="card mb-3">
+        <div class="card-header">
+            <div class="row">
+                <div class="col-md-10">
+                    <i class="fas fa-building"></i> RealEstate
+                  </div>
+                  <div class="col-md-2">
+                    <div class="row clearfix">
+                         <div class="col-md-6"> 
+                            <a onClick="userBlockUnblockRealEstate('block')" multiple class="btn btn-primary btn-sm w-100 text-white" title="User">Unblock</a>
+                        </div>
+                         <div class="col-md-6">
+                            <a onClick="userBlockUnblockRealEstate('unblock')" multiple class="btn btn-primary btn-sm w-100 text-white" title="User">Block</a>
+                         </div>
+                    </div>   
+                </div>
+                  <!-- <div class="col-md-2">
+                    <a href="/post_realestate" class="btn btn-primary btn-block" title="Plan">Add New Post</a>
+                  </div> -->
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive ">
+            <table class="table realestate_table" id="dataTable" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="select_all"></th>
+                        <th> name </th>
+                        <th> mobile</th>
+                        <th> email</th>
+                        <th> currency </th>
+                        <th> payment </th>
+                        <th>user_status</th>
+                        <th width="10%">Details</th>
+                        <th class="text-center"> action </th>
+                    </tr>
+                </thead>
+                <tfoot>
+                    <tr>
+                        <th><input type="checkbox" id="select_all"></th>
+                        <th>name </th>
+                        <th>mobile</th>
+                        <th>email</th>
+                        <th>currency </th>
+                        <th>payment</th>
+                        <th>user_status</th>
+                        <th width="10%">Details</th>
+                        <th> action </th>
+                    </tr>
+                </tfoot>
+                <tbody>
+                    <%
+                        if(realestate_result != '')
+                        {
+                            for(var i=0; i < realestate_result.length; i++)
+							{
+                                %>
+                                    <tr>
+                                        <td > <input class="checkbox" value="<%= realestate_result[i]._id %>" type="checkbox" name="active_status"></td>
+                                        <td><%= realestate_result[i].name %></td>
+                                        <td><%= realestate_result[i].mobile %></td>
+                                        <td><%= realestate_result[i].email %></td>
+                                        <td><%= realestate_result[i].currency %></td>
+                                        <td>
+                                            <%
+                                                if(realestate_result[i].payment_status == true)
+                                                {
+                                                    %>
+                                                        <span class=" btn-success btn-py">Success</span>
+                                                    <%
+                                                }
+                                                else
+                                                {
+                                                    %>
+                                                        <span class=" btn-warning btn-py text-white">Pending</span>
+                                                    <%
+                                                }
+                                            %>
+                                        </td>
+                                        <td>
+                                            <%
+                                                if(realestate_result[i].status == true)
+                                                {
+                                                    %>
+                                                        <span class=" btn-success btn-py">Active</span>
+                                                    <%
+                                                }
+                                                else
+                                                {
+                                                    %>
+                                                        <span class=" btn-warning btn-py text-white">Inactive</span>
+                                                    <%
+                                                }
+                                            %>
+                                        </td>  
+                                        <td>
+                                            <a href="/realestateDetails/<%= realestate_result[i]._id %>">Details</a>
+                                        </td>
+                                        <td>
+                                            <a href="/editRealestate/<%= realestate_result[i]._id %>" class="btn btn-primary btn-sm">
+                                                <i class="fas fa-edit text-white"></i>&nbsp;&nbsp;Edit
+                                            </a>
+                                            &nbsp;
+                                            <a class="btn btn-danger btn-sm text-white" onClick="removeDetails('remove_realestate','<%= realestate_result[i]._id %>')" ><i class="fas fa-trash text-white" style="cursor:pointer"></i>&nbsp;&nbsp;Delete</a> 														
+                                            <!-- <i class="fas fa-trash text-danger" onClick="removeDetails('remove_realestate','<%= realestate_result[i]._id %>')" style="cursor:pointer"></i> -->
+                                        </td>
+                                    </tr>
+                                <%     
+                            }
+                            
+                        }
+                    %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<script>
+    var select_all = document.getElementById("select_all"); //select all checkbox
+    var checkboxes = document.getElementsByClassName("checkbox"); //checkbox items
+
+    //select all checkboxes
+    select_all.addEventListener("change", function(e){
+        for (i = 0; i < checkboxes.length; i++) { 
+            checkboxes[i].checked = select_all.checked;
+        }
+    });
+    
+    for (var i = 0; i < checkboxes.length; i++) {
+        checkboxes[i].addEventListener('change', function(e){ //".checkbox" change 
+            //uncheck "select all", if one of the listed checkbox item is unchecked
+            if(this.checked == false){
+                select_all.checked = false;
+            }
+            //check "select all" if all checkbox items are checked
+            if(document.querySelectorAll('.checkbox:checked').length == checkboxes.length){
+                select_all.checked = true;
+            }
+        });
+    }
+
+    /* User Block Unblock RealEstate */
+    function userBlockUnblockRealEstate(type)
+    {
+        // alert(type);
+        var favorite = [];
+        $.each($("input[name='active_status']:checked"), function() {            
+            favorite.push($(this).val());
+        });
+
+        $.ajax({
+            url: '/userBlockUnblockRealEstate',
+            method: 'POST',
+            data: {type: type, uId: favorite.join(',')}
+        }).done(function(response) {	
+            if(response)
+            {
+                location.reload();
+                toastr.success('Update details are successful!');
+            }
+            else
+            {
+                toastr.success('Some error occured', 'Warning!');
+            }
+        });
+    }
+</script>
+
+<!-- Footer -->
+<% include templates/footer.ejs %> 
